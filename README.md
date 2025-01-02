@@ -10,7 +10,7 @@ We provide you with the following attributes `self'` and `inputs'` that can be u
 
 We also can auto construct your hosts based on your file structure. Whilst providing you with a nice api which will allow you to add more settings to your hosts at a later date or consume another flake-module that can work alongside this flake.
 
-## Explaination of the module
+## Explanation of the module
 
 - `easyHosts.autoConstruct`: If set to true, the module will automatically construct the hosts for you from the directory structure of `easyHosts.path`.
 
