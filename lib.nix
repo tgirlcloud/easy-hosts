@@ -63,6 +63,14 @@ let
     withSystem system (
       { self', inputs', ... }:
       let
+        darwinInput =
+          if (inputs ? darwin) then
+            inputs.darwin
+          else if (inputs ? nix-darwin) then
+            inputs.nix-darwin
+          else
+            throw "cannot find nix-darwin input";
+
         eval = evalModules {
           # we use recursiveUpdate such that users can "override" the specialArgs
           #
@@ -71,7 +79,7 @@ let
           specialArgs = recursiveUpdate {
             # create the modulesPath based on the system, we need
             modulesPath =
-              if class == "darwin" then "${inputs.darwin}/modules" else "${inputs.nixpkgs}/nixos/modules";
+              if class == "darwin" then "${darwinInput}/modules" else "${inputs.nixpkgs}/nixos/modules";
 
             # laying it out this way is completely arbitrary, however it looks nice i guess
             inherit lib;
@@ -107,7 +115,7 @@ let
             # or the darwin modules list provided by nix darwin
             (import (
               if class == "darwin" then
-                "${inputs.darwin}/modules/module-list.nix"
+                "${darwinInput}/modules/module-list.nix"
               else
                 "${inputs.nixpkgs}/nixos/modules/module-list.nix"
             ))
@@ -146,8 +154,8 @@ let
 
                 # we use these values to keep track of what upstream revision we are on, this also
                 # prevents us from recreating docs for the same configuration build if nothing has changed
-                darwinVersionSuffix = ".${inputs.darwin.shortRev or inputs.darwin.dirtyShortRev or "dirty"}";
-                darwinRevision = inputs.darwin.rev or inputs.darwin.dirtyRev or "dirty";
+                darwinVersionSuffix = ".${darwinInput.shortRev or darwinInput.dirtyShortRev or "dirty"}";
+                darwinRevision = darwinInput.rev or darwinInput.dirtyRev or "dirty";
               };
             }))
 
