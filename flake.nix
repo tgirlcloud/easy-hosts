@@ -6,22 +6,22 @@
 
     templates = {
       multi = {
-        path = ./templates/multi;
+        path = ./examples/multi;
         description = "A multi-system flake with auto construction enabled, but only using x86_64-linux.";
       };
 
       multi-specialised = {
-        path = ./templates/multi-specialised;
+        path = ./examples/multi-specialised;
         description = "A multi-system flake with auto construction enabled, using the custom class system of easy-hosts";
       };
 
       not-auto = {
-        path = ./templates/not-auto;
+        path = ./examples/not-auto;
         description = "A flake with auto construction disabled, using only the `easyHosts.hosts` attribute.";
       };
 
       only = {
-        path = ./templates/only;
+        path = ./examples/only;
         description = "A flake with auto construction enabled, with only one class and a more 'flat' structure.";
       };
     };
