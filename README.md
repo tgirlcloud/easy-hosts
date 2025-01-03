@@ -6,7 +6,15 @@ You can find some examples of how to use this module in the [examples](./example
 
 ## Why use this?
 
-We provide you with the following attributes `self'` and `inputs'` that can be used to make your configuration shorter going from writing `inputs.input-name.packages.${pkgs.system}.package-name` to `inputs'.input-name.packages.package-name`.
+We provide you with the following attributes `self'` and `inputs'` that can be used to make your configuration shorter going from writing. See the below for usage
+
+```diff
+- inputs.input-name.packages.${pkgs.system}.package-name
++ inputs'.input-name.packages.package-name
+
+- self.packages.${pkgs.system}.package-name
++ self'.packages.package-name
+```
 
 We also can auto construct your hosts based on your file structure. Whilst providing you with a nice api which will allow you to add more settings to your hosts at a later date or consume another flake-module that can work alongside this flake.
 
@@ -14,7 +22,7 @@ We also can auto construct your hosts based on your file structure. Whilst provi
 
 - `easyHosts.autoConstruct`: If set to true, the module will automatically construct the hosts for you from the directory structure of `easyHosts.path`.
 
-- `easyHosts.path`: The directory to where the hosts are stored, this *must* be set.
+- `easyHosts.path`: The directory to where the hosts are stored, this *must* be set to use `easyHosts.autoConstruct`.
 
 - `easyHosts.onlySystem`: If you only have 1 system type like `aarch64-darwin` then you can use this setting to prevent nesting your directories.
 
