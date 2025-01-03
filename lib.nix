@@ -7,15 +7,12 @@
 let
   inherit (inputs) self;
 
-  constructSystem =
-    target: arch:
-    if (target == "iso" || target == "nixos") then "${arch}-linux" else "${arch}-${target}";
-
   inherit (builtins)
     readDir
     elemAt
     filter
     pathExists
+    foldl'
     ;
   inherit (lib.lists) optionals singleton flatten;
   inherit (lib.attrsets)
@@ -26,6 +23,37 @@ let
     filterAttrs
     ;
   inherit (lib.modules) mkDefault evalModules;
+
+  classToOS = class: if (class == "darwin") then "darwin" else "linux";
+  classToND = class: if (class == "darwin") then "darwin" else "nixos";
+
+  redefineClass =
+    cfg: class:
+    (
+      (cfg.additionalClasses or { })
+      // {
+        linux = "nixos";
+      }
+    ).${class} or class;
+
+  constructSystem =
+    config: class: arch:
+    let
+      class' = redefineClass config class;
+      os = classToOS class';
+    in
+    "${arch}-${os}";
+
+  splitSystem =
+    system:
+    let
+      sp = builtins.split "-" system;
+      arch = elemAt sp 0;
+      class = elemAt sp 2;
+    in
+    {
+      inherit arch class;
+    };
 
   /**
     mkHost is a function that uses withSystem to give us inputs' and self'
@@ -54,8 +82,10 @@ let
     {
       name,
       path,
-      class ? "nixos",
-      system ? "x86_64-linux",
+      # by the time we recive the argument here it can only be one of
+      # nixos, darwin, or iso. The redefineClass function should be used prior
+      class,
+      system,
       modules ? [ ],
       specialArgs ? { },
       ...
@@ -89,7 +119,7 @@ let
 
           # A nominal type for modules. When set and non-null, this adds a check to
           # make sure that only compatible modules are imported.
-          class = if class == "iso" then "nixos" else class;
+          class = classToND class;
 
           modules = flatten [
             # import our host system paths
@@ -164,7 +194,7 @@ let
           ];
         };
       in
-      if (class == "nixos" || class == "iso") then
+      if ((classToND class) == "nixos") then
         { nixosConfigurations.${name} = eval; }
       else
         {
@@ -174,48 +204,39 @@ let
         }
     );
 
-  foldAttrsReccursive = builtins.foldl' (acc: attrs: recursiveUpdate acc attrs) { };
+  foldAttrsReccursive = foldl' (acc: attrs: recursiveUpdate acc attrs) { };
 
   mkHosts =
-    makeHostsConfig:
+    easyHostsConfig:
     foldAttrs (host: acc: host // acc) { } (
       attrValues (
         mapAttrs (
-          name: cfg:
+          name: hostConfig:
           mkHost {
             inherit name;
 
-            inherit (cfg) class system path;
+            inherit (hostConfig) system path;
+
+            class = redefineClass easyHostsConfig hostConfig.class;
 
             # merging is handled later
             modules = [
-              (cfg.modules or [ ])
-              (makeHostsConfig.shared.modules or [ ])
-              ((makeHostsConfig.perClass cfg.class).modules or [ ])
+              (hostConfig.modules or [ ])
+              (easyHostsConfig.shared.modules or [ ])
+              ((easyHostsConfig.perClass hostConfig.class).modules or [ ])
             ];
 
             specialArgs = foldAttrsReccursive [
-              (cfg.specialArgs or { })
-              (makeHostsConfig.shared.specialArgs or { })
-              ((makeHostsConfig.perClass cfg.class).specialArgs or { })
+              (hostConfig.specialArgs or { })
+              (easyHostsConfig.shared.specialArgs or { })
+              ((easyHostsConfig.perClass hostConfig.class).specialArgs or { })
             ];
           }
-        ) makeHostsConfig.hosts
+        ) easyHostsConfig.hosts
       )
     );
 
   onlyDirs = filterAttrs (_: type: type == "directory");
-
-  splitSystem =
-    system:
-    let
-      sp = builtins.split "-" system;
-      arch = elemAt sp 0;
-      class = if ((elemAt sp 2) == "linux") then "nixos" else elemAt sp 2;
-    in
-    {
-      inherit arch class;
-    };
 
   normaliseHosts =
     cfg: hosts:
@@ -224,18 +245,32 @@ let
         attrValues (
           mapAttrs (
             system: hosts':
-            mapAttrs (name: _: {
-              inherit (splitSystem system) arch class;
-              path = "${cfg.path}/${system}/${name}";
-            }) hosts'
+            mapAttrs (
+              name: _:
+              let
+                inherit (splitSystem system) arch class;
+              in
+              {
+                inherit arch class;
+                system = constructSystem cfg arch class;
+                path = "${cfg.path}/${system}/${name}";
+              }
+            ) hosts'
           ) hosts
         )
       )
     else
-      mapAttrs (host: _: {
-        inherit (splitSystem cfg.onlySystem) arch class;
-        path = "${cfg.path}/${host}";
-      }) hosts;
+      mapAttrs (
+        host: _:
+        let
+          inherit (splitSystem cfg.onlySystem) arch class;
+        in
+        {
+          inherit arch class;
+          system = constructSystem cfg arch class;
+          path = "${cfg.path}/${host}";
+        }
+      ) hosts;
 
   buildHosts =
     cfg:

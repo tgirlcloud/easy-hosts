@@ -53,7 +53,6 @@ in
           modules = [ ];
           specialArgs = { };
         };
-
         type = types.functionTo (
           types.submodule {
             options = {
@@ -69,6 +68,19 @@ in
             };
           }
         );
+      };
+
+      additionalClasses = mkOption {
+        default = { };
+        type = types.attrsOf types.str;
+        description = "Additional classes and thier rescpective mappings to already existing classes";
+        example = lib.literalExpression ''
+          {
+            wsl = "nixos";
+            rpi = "nixos";
+            macos = "darwin";
+          }
+        '';
       };
 
       hosts = mkOption {
@@ -93,7 +105,7 @@ in
 
                 system = mkOption {
                   type = types.str;
-                  default = constructSystem self.class self.arch;
+                  default = constructSystem cfg self.class self.arch;
                 };
 
                 path = mkOption {
