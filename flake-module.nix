@@ -17,7 +17,10 @@ let
 
   cfg = config.easyHosts;
 
+  # we really expect a list of paths but i want to accept lists of lists of lists and so on
+  # since they will be flattened in the final function that applies the settings
   modulesType = types.listOf types.anything;
+
   specialArgsType = types.lazyAttrsOf types.raw;
 in
 {
@@ -39,8 +42,6 @@ in
 
       shared = {
         modules = mkOption {
-          # we really expect a list of paths but i want to accept lists of lists of lists and so on
-          # since they will be flattened in the final function that applies the settings
           type = modulesType;
           default = [ ];
         };
