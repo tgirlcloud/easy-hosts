@@ -16,6 +16,9 @@ let
     ;
 
   cfg = config.easyHosts;
+
+  modulesType = types.listOf types.anything;
+  specialArgsType = types.lazyAttrsOf types.raw;
 in
 {
   options = {
@@ -38,12 +41,12 @@ in
         modules = mkOption {
           # we really expect a list of paths but i want to accept lists of lists of lists and so on
           # since they will be flattened in the final function that applies the settings
-          type = types.listOf types.anything;
+          type = modulesType;
           default = [ ];
         };
 
         specialArgs = mkOption {
-          type = types.attrs;
+          type = specialArgsType;
           default = { };
         };
       };
@@ -57,12 +60,12 @@ in
           types.submodule {
             options = {
               modules = mkOption {
-                type = types.listOf types.anything;
+                type = modulesType;
                 default = [ ];
               };
 
               specialArgs = mkOption {
-                type = types.attrs;
+                type = specialArgsType;
                 default = { };
               };
             };
@@ -120,12 +123,12 @@ in
                 };
 
                 modules = mkOption {
-                  type = types.listOf types.anything;
+                  type = modulesType;
                   default = [ ];
                 };
 
                 specialArgs = mkOption {
-                  type = types.attrs;
+                  type = specialArgsType;
                   default = { };
                 };
               };
