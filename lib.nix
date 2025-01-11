@@ -101,20 +101,35 @@ let
           else
             throw "cannot find nix-darwin input";
 
+        # create the modulesPath based on the system, we need
+        modulesPath =
+          if class == "darwin" then "${darwinInput}/modules" else "${inputs.nixpkgs}/nixos/modules";
+
+        # we need to import the module list for our system
+        # this is either the nixos modules list provided by nixpkgs
+        # or the darwin modules list provided by nix darwin
+        baseModules = import "${modulesPath}/module-list.nix";
+
         eval = evalModules {
           # we use recursiveUpdate such that users can "override" the specialArgs
           #
           # This should only be used for special arguments that need to be evaluated
           # when resolving module structure (like in imports).
           specialArgs = recursiveUpdate {
-            # create the modulesPath based on the system, we need
-            modulesPath =
-              if class == "darwin" then "${darwinInput}/modules" else "${inputs.nixpkgs}/nixos/modules";
+            inherit
+              # these are normal args that people expect to be passed
+              lib
+              self # even though self is just the same as `inputs.self`
+              inputs
 
-            # laying it out this way is completely arbitrary, however it looks nice i guess
-            inherit lib;
-            inherit self self';
-            inherit inputs inputs';
+              # these come from flake-parts
+              self'
+              inputs'
+
+              # we need to set this beacuse some modules require it sadly
+              # you may also recall `modulesPath + /installer/scan/not-detected.nix`
+              modulesPath
+              ;
           } specialArgs;
 
           # A nominal type for modules. When set and non-null, this adds a check to
@@ -122,6 +137,9 @@ let
           class = classToND class;
 
           modules = flatten [
+            # bring in all of our base modules
+            baseModules
+
             # import our host system paths
             (
               if path != null then
@@ -140,19 +158,19 @@ let
               "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal-new-kernel.nix"
             ])
 
-            # we need to import the module list for our system
-            # this is either the nixos modules list provided by nixpkgs
-            # or the darwin modules list provided by nix darwin
-            (import (
-              if class == "darwin" then
-                "${darwinInput}/modules/module-list.nix"
-              else
-                "${inputs.nixpkgs}/nixos/modules/module-list.nix"
-            ))
-
             (singleton {
-              # TODO: learn what this means and why its needed to build the iso
-              _module.args.modules = [ ];
+              # some modules to have these arguments, like documentation.nix
+              # <https://github.com/NixOS/nixpkgs/blob/9692553cb583e8dca46b66ab76c0eb2ada1a4098/nixos/modules/misc/documentation.nix>
+              _module.args = {
+                inherit baseModules;
+
+                # this should in the future be the modules that the user added without baseModules
+                modules = [ ];
+
+                # TODO: remove in 25.05
+                # https://github.com/NixOS/nixpkgs/blob/9692553cb583e8dca46b66ab76c0eb2ada1a4098/nixos/lib/eval-config.nix#L38
+                extraModules = [ ];
+              };
 
               # we set the systems hostname based on the host value
               # which should be a string that is the hostname of the system
@@ -236,8 +254,6 @@ let
       )
     );
 
-  onlyDirs = filterAttrs (_: type: type == "directory");
-
   normaliseHosts =
     cfg: hosts:
     if (cfg.onlySystem == null) then
@@ -281,7 +297,9 @@ let
         if (cfg.onlySystem != null) then
           hostsDir
         else
-          mapAttrs (path: _: readDir "${cfg.path}/${path}") (onlyDirs hostsDir);
+          mapAttrs (path: _: readDir "${cfg.path}/${path}") (
+            filterAttrs (_: type: type == "directory") hostsDir
+          );
     in
     normaliseHosts cfg hosts;
 in
