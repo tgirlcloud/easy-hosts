@@ -6,6 +6,7 @@
   ...
 }:
 let
+  inherit (builtins) concatLists attrNames;
   inherit (lib.options) mkOption literalExpression;
   inherit (lib) types;
 
@@ -17,11 +18,27 @@ let
 
   cfg = config.easyHosts;
 
-  # we really expect a list of paths but i want to accept lists of lists of lists and so on
-  # since they will be flattened in the final function that applies the settings
-  modulesType = types.listOf types.anything;
+  mkBasicParams = name: {
+    modules = mkOption {
+      # we really expect a list of paths but i want to accept lists of lists of lists and so on
+      # since they will be flattened in the final function that applies the settings
+      type = types.listOf types.anything;
+      default = [ ];
+      description = "${name} modules to be included in the system";
+      example = literalExpression ''
+        [ ./hardware-configuration.nix ./networking.nix ]
+      '';
+    };
 
-  specialArgsType = types.lazyAttrsOf types.raw;
+    specialArgs = mkOption {
+      type = types.lazyAttrsOf types.raw;
+      default = { };
+      description = "${name} special arguments to be passed to the system";
+      example = literalExpression ''
+        { foo = "bar"; }
+      '';
+    };
+  };
 in
 {
   options = {
@@ -40,17 +57,7 @@ in
         example = literalExpression "aarch64-darwin";
       };
 
-      shared = {
-        modules = mkOption {
-          type = modulesType;
-          default = [ ];
-        };
-
-        specialArgs = mkOption {
-          type = specialArgsType;
-          default = { };
-        };
-      };
+      shared = mkBasicParams "Shared";
 
       perClass = mkOption {
         default = _: {
@@ -59,17 +66,7 @@ in
         };
         type = types.functionTo (
           types.submodule {
-            options = {
-              modules = mkOption {
-                type = modulesType;
-                default = [ ];
-              };
-
-              specialArgs = mkOption {
-                type = specialArgsType;
-                default = { };
-              };
-            };
+            options = mkBasicParams "Per class";
           }
         );
       };
@@ -97,19 +94,40 @@ in
             in
             {
               options = {
+                # keep this up to date with
+                # https://github.com/NixOS/nixpkgs/blob/75a43236cfd40adbc6138029557583eb77920afd/lib/systems/flake-systems.nix#L1
                 arch = mkOption {
-                  type = types.str;
+                  type = types.enum [
+                    "x86_64"
+                    "aarch64"
+                    "armv6l"
+                    "armv7l"
+                    "i686"
+                    "powerpc64le"
+                    "riscv64"
+                  ];
                   default = "x86_64";
+                  example = "aarch64";
                 };
 
                 class = mkOption {
-                  type = types.str;
+                  type = types.enum (concatLists [
+                    [
+                      "nixos"
+                      "darwin"
+                      "iso"
+                    ]
+
+                    (attrNames cfg.additionalClasses)
+                  ]);
                   default = "nixos";
+                  example = "darwin";
                 };
 
                 system = mkOption {
                   type = types.str;
                   default = constructSystem cfg self.class self.arch;
+                  example = "aarch64-darwin";
                 };
 
                 path = mkOption {
@@ -122,17 +140,7 @@ in
                   type = types.bool;
                   default = false;
                 };
-
-                modules = mkOption {
-                  type = modulesType;
-                  default = [ ];
-                };
-
-                specialArgs = mkOption {
-                  type = specialArgsType;
-                  default = { };
-                };
-              };
+              } // (mkBasicParams name);
             }
           )
         );
