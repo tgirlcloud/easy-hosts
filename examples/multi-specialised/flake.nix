@@ -7,7 +7,7 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    easy-hosts.url = "github:isabelroses/easy-hosts";
+    easy-hosts.url = "github:tgirlcloud/easy-hosts";
   };
 
   outputs =
