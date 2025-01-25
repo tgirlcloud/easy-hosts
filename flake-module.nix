@@ -7,7 +7,7 @@
 }:
 let
   inherit (builtins) concatLists attrNames;
-  inherit (lib.options) mkOption literalExpression;
+  inherit (lib.options) mkOption mkEnableOption literalExpression;
   inherit (lib) types;
 
   inherit (import ./lib.nix { inherit lib inputs withSystem; })
@@ -49,12 +49,14 @@ in
         type = types.nullOr types.path;
         default = null;
         example = literalExpression "./hosts";
+        description = "Path to the directory containing the host files";
       };
 
       onlySystem = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = literalExpression "aarch64-darwin";
+        description = "Only construct the hosts with for this platform";
       };
 
       shared = mkBasicParams "Shared";
@@ -64,17 +66,30 @@ in
           modules = [ ];
           specialArgs = { };
         };
+
         type = types.functionTo (
           types.submodule {
             options = mkBasicParams "Per class";
           }
         );
+
+        example = literalExpression ''
+          class: {
+            modules = [
+              { system.nixos.label = class; }
+            ];
+
+            specialArgs = { };
+          }
+        '';
+
+        description = "Per class settings";
       };
 
       additionalClasses = mkOption {
         default = { };
         type = types.attrsOf types.str;
-        description = "Additional classes and thier rescpective mappings to already existing classes";
+        description = "Additional classes and thier respective mappings to already existing classes";
         example = lib.literalExpression ''
           {
             wsl = "nixos";
@@ -85,13 +100,13 @@ in
       };
 
       hosts = mkOption {
+        description = "Hosts to be defined by the flake";
+
         default = { };
+
         type = types.attrsOf (
           types.submodule (
-            { name, ... }:
-            let
-              self = cfg.hosts.${name};
-            in
+            { name, config, ... }:
             {
               options = {
                 # keep this up to date with
@@ -108,6 +123,7 @@ in
                   ];
                   default = "x86_64";
                   example = "aarch64";
+                  description = "The architecture of the host";
                 };
 
                 class = mkOption {
@@ -122,22 +138,25 @@ in
                   ]);
                   default = "nixos";
                   example = "darwin";
+                  description = "The class of the host";
                 };
 
                 system = mkOption {
                   type = types.str;
-                  default = constructSystem cfg self.class self.arch;
+                  default = constructSystem cfg config.class config.arch;
                   example = "aarch64-darwin";
+                  description = "The system to be used for the host";
+                  internal = true; # this should ideally be set by easy-hosts
                 };
 
                 path = mkOption {
                   type = types.nullOr types.path;
                   default = null;
                   example = literalExpression "./hosts/myhost";
+                  description = "Path to the directory containing the host files";
                 };
 
-                deployable = mkOption {
-                  type = types.bool;
+                deployable = mkEnableOption "Is this host deployable" // {
                   default = false;
                 };
               } // (mkBasicParams name);
