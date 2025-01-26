@@ -20,6 +20,9 @@ We also can auto construct your hosts based on your file structure. Whilst provi
 
 ## Explanation of the module
 
+> [!TIP]
+> You can find rendered documentation on the [flake.parts website](https://flake.parts/options/easy-hosts.html)
+
 - `easyHosts.autoConstruct`: If set to true, the module will automatically construct the hosts for you from the directory structure of `easyHosts.path`.
 
 - `easyHosts.path`: The directory to where the hosts are stored, this *must* be set to use `easyHosts.autoConstruct`.
