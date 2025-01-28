@@ -45,7 +45,7 @@ We also can auto construct your hosts based on your file structure. Whilst provi
   - `modules`: A list of modules that will be included in the host.
   - `class`: the class of the host, this can be one of [ "nixos", "darwin", "iso" ] or anything defined by `easyHosts.additonalClasses`.
   - `specialArgs`: A list of special arguments that will be passed to the host.
-  - `deployable`: this was added for people who may want to consume a deploy-rs or colonma flakeModule.
+  - `deployable`: this was added for people who may want to consume a deploy-rs or colmena flakeModule.
 
 ## Similar projects
 
