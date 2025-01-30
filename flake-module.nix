@@ -9,6 +9,7 @@ let
   inherit (builtins) concatLists attrNames;
   inherit (lib.options) mkOption mkEnableOption literalExpression;
   inherit (lib) types;
+  inherit (lib.modules) mkRenamedOptionModule;
 
   inherit (import ./lib.nix { inherit lib inputs withSystem; })
     constructSystem
@@ -16,13 +17,13 @@ let
     buildHosts
     ;
 
-  cfg = config.easyHosts;
+  cfg = config.easy-hosts;
 
   mkBasicParams = name: {
     modules = mkOption {
       # we really expect a list of paths but i want to accept lists of lists of lists and so on
       # since they will be flattened in the final function that applies the settings
-      type = types.listOf types.anything;
+      type = types.listOf types.deferredModule;
       default = [ ];
       description = "${name} modules to be included in the system";
       example = literalExpression ''
@@ -41,8 +42,26 @@ let
   };
 in
 {
+  imports = [
+    (mkRenamedOptionModule [ "easyHosts" "autoConstruct" ] [ "easy-hosts" "autoConstruct" ])
+    (mkRenamedOptionModule [ "easyHosts" "path" ] [ "easy-hosts" "path" ])
+    (mkRenamedOptionModule [ "easyHosts" "onlySystem" ] [ "easy-hosts" "onlySystem" ])
+
+    (mkRenamedOptionModule [ "easyHosts" "shared" "modules" ] [ "easy-hosts" "shared" "modules" ])
+    (mkRenamedOptionModule
+      [ "easyHosts" "shared" "specialArgs" ]
+      [ "easy-hosts" "shared" "specialArgs" ]
+    )
+
+    (mkRenamedOptionModule [ "easyHosts" "perClass" ] [ "easy-hosts" "perClass" ])
+
+    (mkRenamedOptionModule [ "easyHosts" "additionalClasses" ] [ "easy-hosts" "additionalClasses" ])
+
+    (mkRenamedOptionModule [ "easyHosts" "hosts" ] [ "easy-hosts" "hosts" ])
+  ];
+
   options = {
-    easyHosts = {
+    easy-hosts = {
       autoConstruct = lib.mkEnableOption "Automatically construct hosts";
 
       path = mkOption {
