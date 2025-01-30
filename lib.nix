@@ -14,7 +14,7 @@ let
     pathExists
     foldl'
     ;
-  inherit (lib.lists) optionals singleton flatten;
+  inherit (lib.lists) optionals singleton concatLists;
   inherit (lib.attrsets)
     recursiveUpdate
     foldAttrs
@@ -29,13 +29,7 @@ let
   classToND = class: if (class == "darwin") then "darwin" else "nixos";
 
   redefineClass =
-    cfg: class:
-    (
-      (cfg.additionalClasses or { })
-      // {
-        linux = "nixos";
-      }
-    ).${class} or class;
+    cfg: class: ({ linux = "nixos"; } // (cfg.additionalClasses or { })).${class} or class;
 
   constructSystem =
     config: class: arch:
@@ -85,6 +79,7 @@ let
       path,
       # by the time we recive the argument here it can only be one of
       # nixos, darwin, or iso. The redefineClass function should be used prior
+      # nixos, darwin. The redefineClass function should be used prior
       class,
       system,
       modules ? [ ],
@@ -128,14 +123,14 @@ let
         # make sure that only compatible modules are imported.
         class = classToND class;
 
-        modules = flatten [
+        modules = concatLists [
           # bring in all of our base modules
           baseModules
 
           # import our host system paths
           (
             if path != null then
-              path
+              [ path ]
             else
               (filter pathExists [
                 # if the previous path does not exist then we will try to import some paths with some assumptions
@@ -245,8 +240,7 @@ let
 
             class = redefineClass easyHostsConfig hostConfig.class;
 
-            # merging is handled later
-            modules = [
+            modules = concatLists [
               hostConfig.modules
               easyHostsConfig.shared.modules
               (easyHostsConfig.perClass hostConfig.class).modules
