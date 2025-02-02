@@ -87,11 +87,11 @@ let
       ...
     }:
     let
-      darwinInput = inputs.darwin or inputs.nix-darwin or (throw "cannot find nix-darwin input");
       nixpkgs = inputs.nixpkgs or (throw "cannot find nixpkgs input");
+      nix-darwin = inputs.darwin or inputs.nix-darwin or (throw "cannot find nix-darwin input");
 
       # create the modulesPath based on the system, we need
-      modulesPath = if class == "darwin" then "${darwinInput}/modules" else "${nixpkgs}/nixos/modules";
+      modulesPath = if class == "darwin" then "${nix-darwin}/modules" else "${nixpkgs}/nixos/modules";
 
       # we need to import the module list for our system
       # this is either the nixos modules list provided by nixpkgs
@@ -206,8 +206,8 @@ let
 
               # we use these values to keep track of what upstream revision we are on, this also
               # prevents us from recreating docs for the same configuration build if nothing has changed
-              darwinVersionSuffix = ".${darwinInput.shortRev or darwinInput.dirtyShortRev or "dirty"}";
-              darwinRevision = darwinInput.rev or darwinInput.dirtyRev or "dirty";
+              darwinVersionSuffix = ".${nix-darwin.shortRev or nix-darwin.dirtyShortRev or "dirty"}";
+              darwinRevision = nix-darwin.rev or nix-darwin.dirtyRev or "dirty";
             };
           }))
 
