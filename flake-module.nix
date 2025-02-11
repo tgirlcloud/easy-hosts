@@ -162,7 +162,7 @@ in
 
                 system = mkOption {
                   type = types.str;
-                  default = constructSystem cfg config.class config.arch;
+                  default = constructSystem cfg config.arch config.class;
                   example = "aarch64-darwin";
                   description = "The system to be used for the host";
                   internal = true; # this should ideally be set by easy-hosts

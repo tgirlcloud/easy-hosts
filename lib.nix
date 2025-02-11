@@ -32,7 +32,7 @@ let
     cfg: class: ({ linux = "nixos"; } // (cfg.additionalClasses or { })).${class} or class;
 
   constructSystem =
-    config: class: arch:
+    config: arch: class:
     let
       class' = redefineClass config class;
       os = classToOS class';
