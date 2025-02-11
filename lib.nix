@@ -233,6 +233,9 @@ let
       attrValues (
         mapAttrs (
           name: hostConfig:
+          let
+            perClass = easyHostsConfig.perClass hostConfig.class;
+          in
           mkHost {
             inherit name;
 
@@ -243,13 +246,13 @@ let
             modules = concatLists [
               hostConfig.modules
               easyHostsConfig.shared.modules
-              (easyHostsConfig.perClass hostConfig.class).modules
+              perClass.modules
             ];
 
             specialArgs = foldAttrsReccursive [
               hostConfig.specialArgs
               easyHostsConfig.shared.specialArgs
-              (easyHostsConfig.perClass hostConfig.class).specialArgs
+              perClass.specialArgs
             ];
           }
         ) easyHostsConfig.hosts
