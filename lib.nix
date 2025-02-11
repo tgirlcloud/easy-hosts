@@ -269,8 +269,7 @@ let
                 inherit (splitSystem system) arch class;
               in
               {
-                inherit arch;
-                class = classToND class;
+                inherit arch class;
                 system = constructSystem cfg arch class;
                 path = "${cfg.path}/${system}/${name}";
               }
@@ -285,8 +284,7 @@ let
           inherit (splitSystem cfg.onlySystem) arch class;
         in
         {
-          inherit arch;
-          class = classToND class;
+          inherit arch class;
           system = constructSystem cfg arch class;
           path = "${cfg.path}/${host}";
         }
