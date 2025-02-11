@@ -108,7 +108,7 @@ in
       additionalClasses = mkOption {
         default = { };
         type = types.attrsOf types.str;
-        description = "Additional classes and thier respective mappings to already existing classes";
+        description = "Additional classes and their respective mappings to already existing classes";
         example = lib.literalExpression ''
           {
             wsl = "nixos";
