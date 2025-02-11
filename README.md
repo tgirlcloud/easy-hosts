@@ -37,13 +37,13 @@ We also can auto construct your hosts based on your file structure. Whilst provi
   - `modules`: A list of modules that will be included in all the hosts of the given class.
   - `specialArgs`: A list of special arguments that will be passed to all the hosts of the given class.
 
-- `easyHosts.additionalClasses`: This is an attrset of strings with mappings to any of [ "nixos", "darwin", "iso" ]. The intention here to provide a nicer api for `perClass` to operate, you may find yourself including `wsl` as a class beacuse of this.
+- `easyHosts.additionalClasses`: This is an attrset of strings with mappings to any of [ "nixos", "darwin", "iso" ]. The intention here to provide a nicer api for `perClass` to operate, you may find yourself including `wsl` as a class because of this.
 
 - `easyHosts.hosts.<host>`: The options for the given host.
   - `path`: the path to the host, this is not strictly needed if you have a flat directory called `hosts` or `systems`.
   - `arch`: The architecture of the host.
   - `modules`: A list of modules that will be included in the host.
-  - `class`: the class of the host, this can be one of [ "nixos", "darwin", "iso" ] or anything defined by `easyHosts.additonalClasses`.
+  - `class`: the class of the host, this can be one of [ "nixos", "darwin", "iso" ] or anything defined by `easyHosts.additionalClasses`.
   - `specialArgs`: A list of special arguments that will be passed to the host.
   - `deployable`: this was added for people who may want to consume a deploy-rs or colmena flakeModule.
 

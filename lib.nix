@@ -77,7 +77,7 @@ let
     {
       name,
       path,
-      # by the time we recive the argument here it can only be one of
+      # by the time we receive the argument here it can only be one of
       # nixos, darwin, or iso. The redefineClass function should be used prior
       # nixos, darwin. The redefineClass function should be used prior
       class,
@@ -106,14 +106,14 @@ let
         specialArgs = recursiveUpdate {
           inherit
             # these are normal args that people expect to be passed,
-            # but we expect to be evaulated when resolving module structure
+            # but we expect to be evaluated when resolving module structure
             inputs
 
             # even though self is just the same as `inputs.self`
             # we still pass this as some people will use this
             self
 
-            # we need to set this beacuse some modules require it sadly
+            # we need to set this because some modules require it sadly
             # you may also recall `modulesPath + /installer/scan/not-detected.nix`
             modulesPath
             ;
@@ -145,9 +145,9 @@ let
             "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal-new-kernel.nix"
           ])
 
-          # the next 3 singleton's are split up to make it easier to understand as they do things diffrent things
+          # the next 3 singleton's are split up to make it easier to understand as they do things different things
 
-          # recall `specialArgs` would take be prefered when resolving module structure
+          # recall `specialArgs` would take be preferred when resolving module structure
           # well this is how we do it use it for all args that don't need to rosolve module structure
           (singleton {
             _module.args = withSystem system (
@@ -225,7 +225,7 @@ let
         };
       };
 
-  foldAttrsReccursive = foldl' (acc: attrs: recursiveUpdate acc attrs) { };
+  foldAttrsRecursive = foldl' (acc: attrs: recursiveUpdate acc attrs) { };
 
   mkHosts =
     easyHostsConfig:
@@ -249,7 +249,7 @@ let
               perClass.modules
             ];
 
-            specialArgs = foldAttrsReccursive [
+            specialArgs = foldAttrsRecursive [
               hostConfig.specialArgs
               easyHostsConfig.shared.specialArgs
               perClass.specialArgs
