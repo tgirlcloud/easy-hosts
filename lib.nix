@@ -82,14 +82,13 @@ let
       # nixos, darwin. The redefineClass function should be used prior
       class,
       system,
+      nixpkgs,
+      nix-darwin,
       modules ? [ ],
       specialArgs ? { },
       ...
     }:
     let
-      nixpkgs = inputs.nixpkgs or (throw "cannot find nixpkgs input");
-      nix-darwin = inputs.darwin or inputs.nix-darwin or (throw "cannot find nix-darwin input");
-
       # create the modulesPath based on the system, we need
       modulesPath = if class == "darwin" then "${nix-darwin}/modules" else "${nixpkgs}/nixos/modules";
 
@@ -239,7 +238,12 @@ let
           mkHost {
             inherit name;
 
-            inherit (hostConfig) system path;
+            inherit (hostConfig)
+              system
+              path
+              nixpkgs
+              nix-darwin
+              ;
 
             class = redefineClass easyHostsConfig hostConfig.class;
 

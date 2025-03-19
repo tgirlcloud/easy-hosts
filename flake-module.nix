@@ -128,6 +128,20 @@ in
             { name, config, ... }:
             {
               options = {
+                nixpkgs = mkOption {
+                  type = types.anything;
+                  default = inputs.nixpkgs or (throw "cannot find nixpkgs input");
+                  example = literalExpression "inputs.nixpkgs";
+                  description = "The nixpkgs to be used for the host";
+                };
+
+                nix-darwin = mkOption {
+                  type = types.anything;
+                  default = inputs.darwin or inputs.nix-darwin or (throw "cannot find nix-darwin input");
+                  example = literalExpression "inputs.nix-darwin";
+                  description = "The nix-darwin to be used for the host";
+                };
+
                 # keep this up to date with
                 # https://github.com/NixOS/nixpkgs/blob/75a43236cfd40adbc6138029557583eb77920afd/lib/systems/flake-systems.nix#L1
                 arch = mkOption {
