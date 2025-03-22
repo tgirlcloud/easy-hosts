@@ -7,23 +7,25 @@
 let
   inherit (inputs) self;
 
-  inherit (builtins)
-    readDir
+  inherit (builtins) readDir;
+  inherit (lib)
     elemAt
     filter
     pathExists
     foldl'
-    ;
-  inherit (lib.lists) optionals singleton concatLists;
-  inherit (lib.attrsets)
+    optionals
+    singleton
+    concatLists
     recursiveUpdate
     foldAttrs
     attrValues
     mapAttrs
     filterAttrs
+    mkDefault
+    evalModules
+    mergeAttrs
+    assertMsg
     ;
-  inherit (lib.modules) mkDefault evalModules;
-  inherit (lib.trivial) mergeAttrs;
 
   classToOS = class: if (class == "darwin") then "darwin" else "linux";
   classToND = class: if (class == "darwin") then "darwin" else "nixos";
@@ -218,6 +220,7 @@ let
     if ((classToND class) == "nixos") then
       { nixosConfigurations.${name} = eval; }
     else
+      assert assertMsg (nix-darwin != null) "nix-darwin must be set when class is darwin";
       {
         darwinConfigurations.${name} = eval // {
           system = eval.config.system.build.toplevel;

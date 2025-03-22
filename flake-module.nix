@@ -137,7 +137,7 @@ in
 
                 nix-darwin = mkOption {
                   type = types.anything;
-                  default = inputs.darwin or inputs.nix-darwin or (throw "cannot find nix-darwin input");
+                  default = inputs.darwin or inputs.nix-darwin or null;
                   example = literalExpression "inputs.nix-darwin";
                   description = "The nix-darwin to be used for the host";
                 };
