@@ -85,6 +85,12 @@ in
           modules = [ ];
           specialArgs = { };
         };
+	defaultText = ''
+          class: {
+            modules = [ ];
+            specialArgs = { };
+          };
+        '';
 
         type = types.functionTo (
           types.submodule {
@@ -131,15 +137,17 @@ in
                 nixpkgs = mkOption {
                   type = types.anything;
                   default = inputs.nixpkgs or (throw "cannot find nixpkgs input");
-                  example = literalExpression "inputs.nixpkgs";
-                  description = "The nixpkgs to be used for the host";
+                  defaultText = literalExpression "inputs.nixpkgs";
+                  example = literalExpression "inputs.nixpkgs-unstable";
+                  description = "The nixpkgs flake to be used for the host";
                 };
 
                 nix-darwin = mkOption {
                   type = types.anything;
                   default = inputs.darwin or inputs.nix-darwin or null;
-                  example = literalExpression "inputs.nix-darwin";
-                  description = "The nix-darwin to be used for the host";
+                  defaultText = literalExpression "inputs.darwin or inputs.nix-darwin";
+                  example = literalExpression "inputs.my-nix-darwin";
+                  description = "The nix-darwin flake to be used for the host";
                 };
 
                 # keep this up to date with
