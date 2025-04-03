@@ -12,18 +12,17 @@ let
     elemAt
     filter
     pathExists
-    foldl'
+    foldAttrs
+    pipe
     optionals
     singleton
     concatLists
     recursiveUpdate
-    foldAttrs
     attrValues
     mapAttrs
     filterAttrs
     mkDefault
     mergeAttrs
-    assertMsg
     ;
 
   classToOS = class: if (class == "darwin") then "darwin" else "linux";
@@ -91,110 +90,117 @@ let
     }:
     let
       evalHost = if class == "darwin" then nix-darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
-
-      eval = evalHost {
-        # we use recursiveUpdate such that users can "override" the specialArgs
-        #
-        # This should only be used for special arguments that need to be evaluated
-        # when resolving module structure (like in imports).
-        specialArgs = recursiveUpdate {
-          inherit
-            # these are normal args that people expect to be passed,
-            # but we expect to be evaluated when resolving module structure
-            inputs
-
-            # even though self is just the same as `inputs.self`
-            # we still pass this as some people will use this
-            self
-            ;
-        } specialArgs;
-
-        modules = concatLists [
-          # import our host system paths
-          (
-            if path != null then
-              [ path ]
-            else
-              (filter pathExists [
-                # if the previous path does not exist then we will try to import some paths with some assumptions
-                "${self}/hosts/${name}/default.nix"
-                "${self}/systems/${name}/default.nix"
-              ])
-          )
-
-          # get an installer profile from nixpkgs to base the Isos off of
-          # this is useful because it makes things alot easier
-          (optionals (class == "iso") [
-            "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal-new-kernel.nix"
-          ])
-
-          # the next 3 singleton's are split up to make it easier to understand as they do things different things
-
-          # recall `specialArgs` would take be preferred when resolving module structure
-          # well this is how we do it use it for all args that don't need to rosolve module structure
-          (singleton {
-            _module.args = withSystem system (
-              { self', inputs', ... }:
-              {
-                inherit self' inputs';
-              }
-            );
-          })
-
-          # here we make some basic assumptions about the system the person is using
-          # like the system type and the hostname
-          (singleton {
-            # we set the systems hostname based on the host value
-            # which should be a string that is the hostname of the system
-            networking.hostName = mkDefault name;
-
-            nixpkgs = {
-              # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
-              # however for evalModules this will not work, so we do this instead
-              hostPlatform = mkDefault system;
-
-              # The path to the nixpkgs sources used to build the system.
-              # This is automatically set up to be the store path of the nixpkgs flake used to build
-              # the system if using lib.nixosSystem, and is otherwise null by default.
-              # so that means that we should set it to our nixpkgs flake output path
-              flake.source = nixpkgs.outPath;
-            };
-          })
-
-          # if we are on darwin we need to import the nixpkgs source, its used in some
-          # modules, if this is not set then you will get an error
-          (optionals (class == "darwin") (singleton {
-            # without supplying an upstream nixpkgs source, nix-darwin will not be able to build
-            # and will complain and log an error demanding that you must set this value
-            nixpkgs.source = mkDefault nixpkgs;
-          }))
-
-          # import any additional modules that the user has provided
-          modules
-        ];
-      };
     in
-    if ((classToND class) == "nixos") then
-      { nixosConfigurations.${name} = eval; }
-    else
-      assert assertMsg (nix-darwin != null) "nix-darwin must be set when class is darwin";
-      {
-        darwinConfigurations.${name} = eval;
-      };
+    evalHost {
+      # we use recursiveUpdate such that users can "override" the specialArgs
+      #
+      # This should only be used for special arguments that need to be evaluated
+      # when resolving module structure (like in imports).
+      specialArgs = recursiveUpdate {
+        inherit
+          # these are normal args that people expect to be passed,
+          # but we expect to be evaluated when resolving module structure
+          inputs
 
-  foldAttrsRecursive = foldl' (acc: attrs: recursiveUpdate acc attrs) { };
+          # even though self is just the same as `inputs.self`
+          # we still pass this as some people will use this
+          self
+          ;
+      } specialArgs;
+
+      modules = concatLists [
+        # import our host system paths
+        (
+          if path != null then
+            [ path ]
+          else
+            (filter pathExists [
+              # if the previous path does not exist then we will try to import some paths with some assumptions
+              "${self}/hosts/${name}/default.nix"
+              "${self}/systems/${name}/default.nix"
+            ])
+        )
+
+        # get an installer profile from nixpkgs to base the Isos off of
+        # this is useful because it makes things alot easier
+        (optionals (class == "iso") [
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal-new-kernel.nix"
+        ])
+
+        # the next 3 singleton's are split up to make it easier to understand as they do things different things
+
+        # recall `specialArgs` would take be preferred when resolving module structure
+        # well this is how we do it use it for all args that don't need to rosolve module structure
+        (singleton {
+          _module.args = withSystem system (
+            { self', inputs', ... }:
+            {
+              inherit self' inputs';
+            }
+          );
+        })
+
+        # here we make some basic assumptions about the system the person is using
+        # like the system type and the hostname
+        (singleton {
+          # we set the systems hostname based on the host value
+          # which should be a string that is the hostname of the system
+          networking.hostName = mkDefault name;
+
+          nixpkgs = {
+            # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
+            # however for evalModules this will not work, so we do this instead
+            hostPlatform = mkDefault system;
+
+            # The path to the nixpkgs sources used to build the system.
+            # This is automatically set up to be the store path of the nixpkgs flake used to build
+            # the system if using lib.nixosSystem, and is otherwise null by default.
+            # so that means that we should set it to our nixpkgs flake output path
+            flake.source = nixpkgs.outPath;
+          };
+        })
+
+        # if we are on darwin we need to import the nixpkgs source, its used in some
+        # modules, if this is not set then you will get an error
+        (optionals (class == "darwin") (singleton {
+          # without supplying an upstream nixpkgs source, nix-darwin will not be able to build
+          # and will complain and log an error demanding that you must set this value
+          nixpkgs.source = mkDefault nixpkgs;
+        }))
+
+        # import any additional modules that the user has provided
+        modules
+      ];
+    };
+
+  toHostOutput =
+    {
+      name,
+      class,
+      output,
+    }:
+    if ((classToND class) == "nixos") then
+      { nixosConfigurations.${name} = output; }
+    else
+      { darwinConfigurations.${name} = output; };
+
+  foldAttrsMerge = foldAttrs mergeAttrs { };
 
   mkHosts =
     easyHostsConfig:
-    foldAttrs mergeAttrs { } (
-      attrValues (
-        mapAttrs (
-          name: hostConfig:
-          let
-            perClass = easyHostsConfig.perClass hostConfig.class;
-          in
-          mkHost {
-            inherit name;
+    pipe easyHostsConfig.hosts [
+      (mapAttrs (
+        name: hostConfig:
+        let
+          # memoize the class and perClass values so we don't have to recompute them
+          perClass = easyHostsConfig.perClass hostConfig.class;
+          class = redefineClass easyHostsConfig hostConfig.class;
+        in
+        toHostOutput {
+          inherit name class;
+
+          output = mkHost {
+            inherit name class;
 
             inherit (hostConfig)
               system
@@ -203,57 +209,46 @@ let
               nix-darwin
               ;
 
-            class = redefineClass easyHostsConfig hostConfig.class;
-
             modules = concatLists [
               hostConfig.modules
               easyHostsConfig.shared.modules
               perClass.modules
             ];
 
-            specialArgs = foldAttrsRecursive [
+            specialArgs = foldAttrsMerge [
               hostConfig.specialArgs
               easyHostsConfig.shared.specialArgs
               perClass.specialArgs
             ];
-          }
-        ) easyHostsConfig.hosts
-      )
-    );
+          };
+        }
+      ))
+
+      attrValues
+      foldAttrsMerge
+    ];
+
+  normaliseHost =
+    cfg: system: path:
+    let
+      inherit (splitSystem system) arch class;
+    in
+    {
+      inherit arch class path;
+      system = constructSystem cfg arch class;
+    };
 
   normaliseHosts =
     cfg: hosts:
     if (cfg.onlySystem == null) then
-      foldAttrs (acc: host: acc // host) { } (
-        attrValues (
-          mapAttrs (
-            system: hosts':
-            mapAttrs (
-              name: _:
-              let
-                inherit (splitSystem system) arch class;
-              in
-              {
-                inherit arch class;
-                system = constructSystem cfg arch class;
-                path = "${cfg.path}/${system}/${name}";
-              }
-            ) hosts'
-          ) hosts
-        )
-      )
+      pipe hosts [
+        (mapAttrs (system: mapAttrs (name: _: normaliseHost cfg system "${cfg.path}/${system}/${name}")))
+
+        attrValues
+        foldAttrsMerge
+      ]
     else
-      mapAttrs (
-        host: _:
-        let
-          inherit (splitSystem cfg.onlySystem) arch class;
-        in
-        {
-          inherit arch class;
-          system = constructSystem cfg arch class;
-          path = "${cfg.path}/${host}";
-        }
-      ) hosts;
+      mapAttrs (name: _: normaliseHost cfg cfg.onlySystem "${cfg.path}/${name}") hosts;
 
   buildHosts =
     cfg:
