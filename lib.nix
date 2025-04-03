@@ -22,7 +22,6 @@ let
     mapAttrs
     filterAttrs
     mkDefault
-    evalModules
     mergeAttrs
     assertMsg
     ;
@@ -91,15 +90,9 @@ let
       ...
     }:
     let
-      # create the modulesPath based on the system, we need
-      modulesPath = if class == "darwin" then "${nix-darwin}/modules" else "${nixpkgs}/nixos/modules";
+      evalHost = if class == "darwin" then nix-darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
 
-      # we need to import the module list for our system
-      # this is either the nixos modules list provided by nixpkgs
-      # or the darwin modules list provided by nix darwin
-      baseModules = import "${modulesPath}/module-list.nix";
-
-      eval = evalModules {
+      eval = evalHost {
         # we use recursiveUpdate such that users can "override" the specialArgs
         #
         # This should only be used for special arguments that need to be evaluated
@@ -113,21 +106,10 @@ let
             # even though self is just the same as `inputs.self`
             # we still pass this as some people will use this
             self
-
-            # we need to set this because some modules require it sadly
-            # you may also recall `modulesPath + /installer/scan/not-detected.nix`
-            modulesPath
             ;
         } specialArgs;
 
-        # A nominal type for modules. When set and non-null, this adds a check to
-        # make sure that only compatible modules are imported.
-        class = classToND class;
-
         modules = concatLists [
-          # bring in all of our base modules
-          baseModules
-
           # import our host system paths
           (
             if path != null then
@@ -159,21 +141,6 @@ let
             );
           })
 
-          # some modules to have these arguments, like documentation.nix
-          # <https://github.com/NixOS/nixpkgs/blob/9692553cb583e8dca46b66ab76c0eb2ada1a4098/nixos/modules/misc/documentation.nix>
-          (singleton {
-            _module.args = {
-              inherit baseModules;
-
-              # this should in the future be the modules that the user added without baseModules
-              modules = [ ];
-
-              # TODO: remove in 25.05
-              # https://github.com/NixOS/nixpkgs/blob/9692553cb583e8dca46b66ab76c0eb2ada1a4098/nixos/lib/eval-config.nix#L38
-              extraModules = [ ];
-            };
-          })
-
           # here we make some basic assumptions about the system the person is using
           # like the system type and the hostname
           (singleton {
@@ -200,16 +167,6 @@ let
             # without supplying an upstream nixpkgs source, nix-darwin will not be able to build
             # and will complain and log an error demanding that you must set this value
             nixpkgs.source = mkDefault nixpkgs;
-
-            system = {
-              # i don't quite know why this is set but upstream does it so i will too
-              checks.verifyNixPath = false;
-
-              # we use these values to keep track of what upstream revision we are on, this also
-              # prevents us from recreating docs for the same configuration build if nothing has changed
-              darwinVersionSuffix = ".${nix-darwin.shortRev or nix-darwin.dirtyShortRev or "dirty"}";
-              darwinRevision = nix-darwin.rev or nix-darwin.dirtyRev or "dirty";
-            };
           }))
 
           # import any additional modules that the user has provided
@@ -222,9 +179,7 @@ let
     else
       assert assertMsg (nix-darwin != null) "nix-darwin must be set when class is darwin";
       {
-        darwinConfigurations.${name} = eval // {
-          system = eval.config.system.build.toplevel;
-        };
+        darwinConfigurations.${name} = eval;
       };
 
   foldAttrsRecursive = foldl' (acc: attrs: recursiveUpdate acc attrs) { };
