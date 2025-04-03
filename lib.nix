@@ -25,12 +25,116 @@ let
     mergeAttrs
     ;
 
+  /**
+    classToOS
+
+    # Arguments
+
+    - [class]: The class of the system. This is usually one of `nixos`, `darwin`, or `iso`.
+
+    # Type
+
+    ```
+    classToOS :: String -> String
+    ```
+
+    # Example
+
+    ```nix
+    classToOS "darwin"
+    => "darwin"
+    ```
+
+    ```nix
+    classToOS "nixos"
+    => "linux"
+    ```
+  */
   classToOS = class: if (class == "darwin") then "darwin" else "linux";
+
+  /**
+    classToND
+
+    # Arguments
+
+    - [class]: The class of the system. This is usually one of `nixos`, `darwin`, or `iso`.
+
+    # Type
+
+    ```
+    classToND :: String -> String
+    ```
+
+    # Example
+
+    ```nix
+    classToND "darwin"
+    => "darwin"
+    ```
+
+    ```nix
+    classToND "iso"
+    => "nixos"
+    ```
+  */
   classToND = class: if (class == "darwin") then "darwin" else "nixos";
 
+  /**
+    redefineClass
+
+    # Arguments
+
+    - [additionalClasses]: A set of additional classes to be used for the system.
+    - [class]: The class of the system. This is usually one of `nixos`, `darwin`, or `iso`.
+
+    # Type
+
+    ```
+    redefineClass :: AttrSet -> String -> String
+    ```
+
+    # Example
+
+    ```nix
+    redefineClass { rpi = "nixos"; } "linux"
+    => "nixos"
+    ```
+
+    ```nix
+    redefineClass { rpi = "nixos"; } "rpi"
+    => "nixos"
+    ```
+  */
   redefineClass =
     additionalClasses: class: ({ linux = "nixos"; } // additionalClasses).${class} or class;
 
+  /**
+    constructSystem
+
+    # Arguments
+
+    - [additionalClasses]: A set of additional classes to be used for the system.
+    - [arch]: The architecture of the system. This is usually one of `x86_64`, `aarch64`, or `armv7l`.
+    - [class]: The class of the system. This is usually one of `nixos`, `darwin`, or `iso`.
+
+    # Type
+
+    ```
+    constructSystem :: AttrSet -> String -> String -> String
+    ```
+
+    # Example
+
+    ```nix
+    constructSystem { rpi = "nixos"; } "x86_64" "rpi"
+    => "x86_64-linux"
+    ```
+
+    ```nix
+    constructSystem { rpi = "nixos"; } "x86_64" "linux"
+    => "x86_64-linux"
+    ```
+  */
   constructSystem =
     additionalClasses: arch: class:
     let
@@ -39,6 +143,31 @@ let
     in
     "${arch}-${os}";
 
+  /**
+    splitSystem
+
+    # Arguments
+
+    - [system]: The system to be split. This is usually one of `x86_64-linux`, `aarch64-darwin`, or `armv7l-linux`.
+
+    # Type
+
+    ```
+    splitSystem :: String -> AttrSet
+    ```
+
+    # Example
+
+    ```nix
+    splitSystem "x86_64-linux"
+    => { arch = "x86_64"; class = "linux"; }
+    ```
+
+    ```nix
+    splitSystem "aarch64-darwin"
+    => { arch = "aarch64"; class = "darwin"; }
+    ```
+  */
   splitSystem =
     system:
     let
@@ -173,6 +302,32 @@ let
       ];
     };
 
+  /**
+    toHostOutput
+
+    # Arguments
+
+    - [name]: The name of the host.
+    - [class]: The class of the host. This is usually one of `nixos`, `darwin`, or `iso`.
+    - [output]: The output of the host.
+
+    # Type
+
+    ```
+    toHostOutput :: AttrSet -> AttrSet
+    ```
+
+    # Example
+
+    ```nix
+      toHostOutput {
+        name = "myhost";
+        class = "nixos";
+        output = { };
+      }
+      => { nixosConfigurations.myhost = { }; }
+    ```
+  */
   toHostOutput =
     {
       name,
@@ -186,6 +341,19 @@ let
 
   foldAttrsMerge = foldAttrs mergeAttrs { };
 
+  /**
+    mkHosts is a function that takes a set of hosts and returns a set of host outputs.
+
+    # Arguments
+
+    - [easyHostsConfig]: The easy-hosts configuration.
+
+    # Type
+
+    ```
+    mkHosts :: AttrSet -> AttrSet
+    ```
+  */
   mkHosts =
     easyHostsConfig:
     pipe easyHostsConfig.hosts [
@@ -228,6 +396,28 @@ let
       foldAttrsMerge
     ];
 
+  /**
+    normaliseHost
+
+    # Arguments
+
+    - [additionalClasses]: A set of additional classes to be used for the system.
+    - [system]: The system to be normalised. This is usually one of `x86_64-linux`, `aarch64-darwin`, or `armv7l-linux`.
+    - [path]: The path to the host.
+
+    # Type
+
+    ```
+    normaliseHost :: AttrSet -> String -> String -> AttrSet
+    ```
+
+    # Example
+
+    ```nix
+      normaliseHost { rpi = "nixos"; } "x86_64-linux" "/path/to/host"
+      => { arch = "x86_64"; class = "linux"; path = "/path/to/host"; system = "x86_64-linux"; }
+    ```
+  */
   normaliseHost =
     additionalClasses: system: path:
     let
@@ -238,6 +428,20 @@ let
       system = constructSystem additionalClasses arch class;
     };
 
+  /**
+    normaliseHosts is a function that takes a set of hosts and returns a set of normalised hosts.
+
+    # Arguments
+
+    - [cfg]: The easy-hosts configuration.
+    - [hosts]: The hosts to be normalised.
+
+    # Type
+
+    ```
+    normaliseHosts :: AttrSet -> AttrSet -> AttrSet
+    ```
+  */
   normaliseHosts =
     cfg: hosts:
     if (cfg.onlySystem == null) then
@@ -253,6 +457,20 @@ let
     else
       mapAttrs (name: _: normaliseHost cfg.additionalClasses cfg.onlySystem "${cfg.path}/${name}") hosts;
 
+  /**
+    buildHosts is a function that takes a configuration and returns a set of hosts.
+    It is used to build the hosts for the system.
+
+    # Arguments
+
+    - [cfg]: The easy-hosts configuration.
+
+    # Type
+
+    ```
+    buildHosts :: AttrSet -> AttrSet
+    ```
+  */
   buildHosts =
     cfg:
     let
