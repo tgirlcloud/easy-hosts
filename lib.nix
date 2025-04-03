@@ -29,12 +29,12 @@ let
   classToND = class: if (class == "darwin") then "darwin" else "nixos";
 
   redefineClass =
-    cfg: class: ({ linux = "nixos"; } // (cfg.additionalClasses or { })).${class} or class;
+    additionalClasses: class: ({ linux = "nixos"; } // additionalClasses).${class} or class;
 
   constructSystem =
-    config: arch: class:
+    additionalClasses: arch: class:
     let
-      class' = redefineClass config class;
+      class' = redefineClass additionalClasses class;
       os = classToOS class';
     in
     "${arch}-${os}";
@@ -194,7 +194,7 @@ let
         let
           # memoize the class and perClass values so we don't have to recompute them
           perClass = easyHostsConfig.perClass hostConfig.class;
-          class = redefineClass easyHostsConfig hostConfig.class;
+          class = redefineClass easyHostsConfig.additionalClasses hostConfig.class;
         in
         toHostOutput {
           inherit name class;
@@ -229,26 +229,29 @@ let
     ];
 
   normaliseHost =
-    cfg: system: path:
+    additionalClasses: system: path:
     let
       inherit (splitSystem system) arch class;
     in
     {
       inherit arch class path;
-      system = constructSystem cfg arch class;
+      system = constructSystem additionalClasses arch class;
     };
 
   normaliseHosts =
     cfg: hosts:
     if (cfg.onlySystem == null) then
       pipe hosts [
-        (mapAttrs (system: mapAttrs (name: _: normaliseHost cfg system "${cfg.path}/${system}/${name}")))
+        (mapAttrs (
+          system:
+          mapAttrs (name: _: normaliseHost cfg.additionalClasses system "${cfg.path}/${system}/${name}")
+        ))
 
         attrValues
         foldAttrsMerge
       ]
     else
-      mapAttrs (name: _: normaliseHost cfg cfg.onlySystem "${cfg.path}/${name}") hosts;
+      mapAttrs (name: _: normaliseHost cfg.additionalClasses cfg.onlySystem "${cfg.path}/${name}") hosts;
 
   buildHosts =
     cfg:
