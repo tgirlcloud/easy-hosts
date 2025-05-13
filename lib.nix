@@ -23,6 +23,7 @@ let
     filterAttrs
     mkDefault
     mergeAttrs
+    updateRecursive
     ;
 
   /**
@@ -340,6 +341,7 @@ let
       { darwinConfigurations.${name} = output; };
 
   foldAttrsMerge = foldAttrs mergeAttrs { };
+  foldAttrsMergeRec = foldAttrs updateRecursive { };
 
   /**
     mkHosts is a function that takes a set of hosts and returns a set of host outputs.
@@ -383,7 +385,7 @@ let
               perClass.modules
             ];
 
-            specialArgs = foldAttrsMerge [
+            specialArgs = foldAttrsMergeRec [
               hostConfig.specialArgs
               easyHostsConfig.shared.specialArgs
               perClass.specialArgs
