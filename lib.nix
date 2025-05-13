@@ -23,7 +23,6 @@ let
     filterAttrs
     mkDefault
     mergeAttrs
-    updateRecursive
     ;
 
   /**
@@ -341,7 +340,7 @@ let
       { darwinConfigurations.${name} = output; };
 
   foldAttrsMerge = foldAttrs mergeAttrs { };
-  foldAttrsMergeRec = foldAttrs updateRecursive { };
+  foldAttrsMergeRec = foldAttrs recursiveUpdate { };
 
   /**
     mkHosts is a function that takes a set of hosts and returns a set of host outputs.
