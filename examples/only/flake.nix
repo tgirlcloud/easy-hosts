@@ -17,7 +17,7 @@
 
       systems = [ "aarch64-darwin" ];
 
-      easyHosts = {
+      easy-hosts = {
         autoConstruct = true;
         path = ./hosts;
         onlySystem = "aarch64-darwin";

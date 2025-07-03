@@ -20,7 +20,7 @@
         "aarch64-darwin"
       ];
 
-      easyHosts.hosts = {
+      easy-hosts.hosts = {
         test = {
           arch = "x86_64";
           class = "nixos";

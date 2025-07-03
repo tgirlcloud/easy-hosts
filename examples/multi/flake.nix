@@ -17,7 +17,7 @@
 
       systems = [ "x86_64-linux" ];
 
-      easyHosts = {
+      easy-hosts = {
         autoConstruct = true;
         path = ./hosts;
       };

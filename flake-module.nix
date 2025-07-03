@@ -193,7 +193,7 @@ in
   config = {
     # if the user has made it such that they want the hosts to be constructed automatically
     # i.e. from the file paths then we will do that
-    easyHosts.hosts = lib.mkIf cfg.autoConstruct (buildHosts cfg);
+    easy-hosts.hosts = lib.mkIf cfg.autoConstruct (buildHosts cfg);
 
     flake = mkHosts cfg;
   };

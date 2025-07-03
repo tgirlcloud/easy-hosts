@@ -20,7 +20,7 @@
         "aarch64-darwin"
       ];
 
-      easyHosts = {
+      easy-hosts = {
         autoConstruct = true;
         path = ./hosts;
 
