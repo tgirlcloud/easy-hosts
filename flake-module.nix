@@ -42,24 +42,6 @@ let
   };
 in
 {
-  imports = [
-    (mkRenamedOptionModule [ "easyHosts" "autoConstruct" ] [ "easy-hosts" "autoConstruct" ])
-    (mkRenamedOptionModule [ "easyHosts" "path" ] [ "easy-hosts" "path" ])
-    (mkRenamedOptionModule [ "easyHosts" "onlySystem" ] [ "easy-hosts" "onlySystem" ])
-
-    (mkRenamedOptionModule [ "easyHosts" "shared" "modules" ] [ "easy-hosts" "shared" "modules" ])
-    (mkRenamedOptionModule
-      [ "easyHosts" "shared" "specialArgs" ]
-      [ "easy-hosts" "shared" "specialArgs" ]
-    )
-
-    (mkRenamedOptionModule [ "easyHosts" "perClass" ] [ "easy-hosts" "perClass" ])
-
-    (mkRenamedOptionModule [ "easyHosts" "additionalClasses" ] [ "easy-hosts" "additionalClasses" ])
-
-    (mkRenamedOptionModule [ "easyHosts" "hosts" ] [ "easy-hosts" "hosts" ])
-  ];
-
   options = {
     easy-hosts = {
       autoConstruct = lib.mkEnableOption "Automatically construct hosts";
