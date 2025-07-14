@@ -37,6 +37,10 @@ We also can auto construct your hosts based on your file structure. Whilst provi
   - `modules`: A list of modules that will be included in all the hosts of the given class.
   - `specialArgs`: A list of special arguments that will be passed to all the hosts of the given class.
 
+- `easy-hosts.perTag`: This provides you with the `tag` argument such that you can specify what tags get which modules.
+  - `modules`: A list of modules that will be included in all the hosts with the given tag.
+  - `specialArgs`: A list of special arguments that will be passed to all the hosts with the given tag.
+
 - `easy-hosts.additionalClasses`: This is an attrset of strings with mappings to any of [ "nixos", "darwin", "iso" ]. The intention here to provide a nicer api for `perClass` to operate, you may find yourself including `wsl` as a class because of this.
 
 - `easy-hosts.hosts.<host>`: The options for the given host.
@@ -44,6 +48,7 @@ We also can auto construct your hosts based on your file structure. Whilst provi
   - `arch`: The architecture of the host.
   - `modules`: A list of modules that will be included in the host.
   - `class`: the class of the host, this can be one of [ "nixos", "darwin", "iso" ] or anything defined by `easy-hosts.additionalClasses`.
+  - `tags`: tags that apply to the host, you can use this like `class`, but it allows for multiple of them to be present.
   - `specialArgs`: A list of special arguments that will be passed to the host.
   - `deployable`: this was added for people who may want to consume a deploy-rs or colmena flakeModule.
 
