@@ -20,6 +20,23 @@
       easy-hosts = {
         autoConstruct = true;
         path = ./hosts;
+
+        # Reduce size of the image
+        hosts.test3.tags = [ "minimal" ];
+
+        perTag =
+          let
+            tags = {
+              minimal =
+                { modulesPath, ... }:
+                {
+                  imports = [ "${modulesPath}/profiles/minimal.nix" ];
+                };
+            };
+          in
+          tag: {
+            modules = [ tags.${tag} ];
+          };
       };
     };
 }

@@ -93,6 +93,41 @@ in
         description = "Per class settings";
       };
 
+      perTag = mkOption {
+        default = _: {
+          modules = [ ];
+          specialArgs = { };
+        };
+        defaultText = ''
+          tag: {
+            modules = [ ];
+            specialArgs = { };
+          };
+        '';
+
+        type = types.functionTo (
+          types.submodule {
+            options = mkBasicParams "Per tag";
+          }
+        );
+
+        example = literalExpression ''
+          let
+            tagModule = {
+              laptop = ./modules/laptop;
+              gaming = ./modules/gaming;
+            };
+          in
+          tag: {
+            modules = [ tagModule.''${tag} ];
+
+            specialArgs = { };
+          }
+        '';
+
+        description = "Per tag settings";
+      };
+
       additionalClasses = mkOption {
         default = { };
         type = types.attrsOf types.str;
@@ -162,6 +197,13 @@ in
                   default = "nixos";
                   example = "darwin";
                   description = "The class of the host";
+                };
+
+                tags = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                  example = [ "laptop" ];
+                  description = "Extra tags for the host";
                 };
 
                 system = mkOption {

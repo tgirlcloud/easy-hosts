@@ -363,6 +363,7 @@ let
         let
           # memoize the class and perClass values so we don't have to recompute them
           perClass = easyHostsConfig.perClass hostConfig.class;
+          perTag = builtins.map (easyHostsConfig.perTag) hostConfig.tags;
           class = redefineClass easyHostsConfig.additionalClasses hostConfig.class;
         in
         toHostOutput {
@@ -378,17 +379,23 @@ let
               nix-darwin
               ;
 
-            modules = concatLists [
-              hostConfig.modules
-              easyHostsConfig.shared.modules
-              perClass.modules
-            ];
+            modules = concatLists (
+              [
+                hostConfig.modules
+                easyHostsConfig.shared.modules
+                perClass.modules
+              ]
+              ++ (builtins.map ({ modules, ... }: modules) perTag)
+            );
 
-            specialArgs = foldAttrsMergeRec [
-              hostConfig.specialArgs
-              easyHostsConfig.shared.specialArgs
-              perClass.specialArgs
-            ];
+            specialArgs = foldAttrsMergeRec (
+              [
+                hostConfig.specialArgs
+                easyHostsConfig.shared.specialArgs
+                perClass.specialArgs
+              ]
+              ++ (builtins.map ({ specialArgs, ... }: specialArgs) perTag)
+            );
           };
         }
       ))
