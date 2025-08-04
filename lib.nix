@@ -364,6 +364,7 @@ let
           # memoize the class and perClass values so we don't have to recompute them
           perClass = easyHostsConfig.perClass hostConfig.class;
           perTag = builtins.map (easyHostsConfig.perTag) hostConfig.tags;
+          perArch = builtins.map (easyHostsConfig.perTag) hostConfig.arch;
           class = redefineClass easyHostsConfig.additionalClasses hostConfig.class;
         in
         toHostOutput {
@@ -384,6 +385,7 @@ let
                 hostConfig.modules
                 easyHostsConfig.shared.modules
                 perClass.modules
+                perArch.modules
               ]
               ++ (builtins.map ({ modules, ... }: modules) perTag)
             );
@@ -393,6 +395,7 @@ let
                 hostConfig.specialArgs
                 easyHostsConfig.shared.specialArgs
                 perClass.specialArgs
+                perArch.specialArgs
               ]
               ++ (builtins.map ({ specialArgs, ... }: specialArgs) perTag)
             );
