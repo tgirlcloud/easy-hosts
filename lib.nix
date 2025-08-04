@@ -362,9 +362,14 @@ let
         name: hostConfig:
         let
           # memoize the class and perClass values so we don't have to recompute them
-          perClass = easyHostsConfig.perClass hostConfig.class;
-          perArch = easyHostsConfig.perArch hostConfig.arch;
-          perTag = builtins.map (easyHostsConfig.perTag) hostConfig.tags;
+          sources = lib.flatten [
+            # modules and specialArgs from different sources combined
+            easyHostsConfig.shared
+            hostConfig
+            (builtins.map easyHostsConfig.perTag hostConfig.tags)
+            (easyHostsConfig.perClass hostConfig.class)
+            (easyHostsConfig.perArch hostConfig.arch)
+          ];
           class = redefineClass easyHostsConfig.additionalClasses hostConfig.class;
         in
         toHostOutput {
@@ -380,25 +385,8 @@ let
               nix-darwin
               ;
 
-            modules = concatLists (
-              [
-                hostConfig.modules
-                easyHostsConfig.shared.modules
-                perClass.modules
-                perArch.modules
-              ]
-              ++ (builtins.map ({ modules, ... }: modules) perTag)
-            );
-
-            specialArgs = foldAttrsMergeRec (
-              [
-                hostConfig.specialArgs
-                easyHostsConfig.shared.specialArgs
-                perClass.specialArgs
-                perArch.specialArgs
-              ]
-              ++ (builtins.map ({ specialArgs, ... }: specialArgs) perTag)
-            );
+            modules = concatLists (builtins.map (x: x.modules) sources);
+            specialArgs = builtins.foldl' recursiveUpdate {} (builtins.map (x: x.specialArgs) sources);
           };
         }
       ))
