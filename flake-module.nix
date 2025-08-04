@@ -99,7 +99,7 @@ in
           specialArgs = { };
         };
         defaultText = ''
-          class: {
+          arch: {
             modules = [ ];
             specialArgs = { };
           };
