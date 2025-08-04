@@ -93,6 +93,37 @@ in
         description = "Per class settings";
       };
 
+      perArch = mkOption {
+        default = _: {
+          modules = [ ];
+          specialArgs = { };
+        };
+        defaultText = ''
+          arch: {
+            modules = [ ];
+            specialArgs = { };
+          };
+        '';
+
+        type = types.functionTo (
+          types.submodule {
+            options = mkBasicParams "Per arch";
+          }
+        );
+
+        example = literalExpression ''
+          arch: {
+            modules = [
+              { system.nixos.label = arch; }
+            ];
+
+            specialArgs = { };
+          }
+        '';
+
+        description = "Per arch settings";
+      };
+
       perTag = mkOption {
         default = _: {
           modules = [ ];

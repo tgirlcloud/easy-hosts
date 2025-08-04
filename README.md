@@ -37,6 +37,10 @@ We also can auto construct your hosts based on your file structure. Whilst provi
   - `modules`: A list of modules that will be included in all the hosts of the given class.
   - `specialArgs`: A list of special arguments that will be passed to all the hosts of the given class.
 
+- `easy-hosts.perArch`: This provides you with the `arch` argument such that you can specify what architectures get which modules.
+  - `modules`: A list of modules that will be included in all the hosts of the given arch.
+  - `specialArgs`: A list of special arguments that will be passed to all the hosts of the given arch.
+
 - `easy-hosts.perTag`: This provides you with the `tag` argument such that you can specify what tags get which modules.
   - `modules`: A list of modules that will be included in all the hosts with the given tag.
   - `specialArgs`: A list of special arguments that will be passed to all the hosts with the given tag.
