@@ -363,8 +363,8 @@ let
         let
           # memoize the class and perClass values so we don't have to recompute them
           perClass = easyHostsConfig.perClass hostConfig.class;
+          perArch = easyHostsConfig.perArch hostConfig.arch;
           perTag = builtins.map (easyHostsConfig.perTag) hostConfig.tags;
-          perArch = builtins.map (easyHostsConfig.perTag) hostConfig.arch;
           class = redefineClass easyHostsConfig.additionalClasses hostConfig.class;
         in
         toHostOutput {
