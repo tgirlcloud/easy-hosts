@@ -5,8 +5,6 @@ on:
   push:
   pull_request:
 
-permissions: {}
-
 jobs:
   check-flake:
     name: Check Flake
@@ -15,9 +13,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref && inputs.ref || github.ref_name }}
-          persist-credentials: false
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
