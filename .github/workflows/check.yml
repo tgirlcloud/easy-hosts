@@ -1,0 +1,28 @@
+name: Validate Nix Flake
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  check-flake:
+    name: Check Flake
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref && inputs.ref || github.ref_name }}
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Check Flake
+        run: |
+          cd tests
+          nix flake check --option allow-import-from-derivation false
