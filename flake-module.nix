@@ -50,6 +50,9 @@ let
   };
 in
 {
+  # re-add `_file` after that gets stripped by `import`. Improves docs and errors
+  _file = "${__curPos.file}";
+
   options = {
     easy-hosts = {
       autoConstruct = lib.mkEnableOption "Automatically construct hosts";
