@@ -2,6 +2,7 @@
   lib,
   inputs,
   withSystem,
+  easy-hosts,
   ...
 }:
 let
@@ -261,6 +262,9 @@ let
         # recall `specialArgs` would take be preferred when resolving module structure
         # well this is how we do it use it for all args that don't need to rosolve module structure
         (singleton {
+          key = "easy-hosts#specialArgs";
+          _file = "${easy-hosts.outPath}/lib.nix";
+
           _module.args = withSystem system (
             { self', inputs', ... }:
             {
@@ -272,9 +276,17 @@ let
         # here we make some basic assumptions about the system the person is using
         # like the system type and the hostname
         (singleton {
+          key = "easy-hosts#hostname";
+          _file = "${easy-hosts.outPath}/lib.nix";
+
           # we set the systems hostname based on the host value
           # which should be a string that is the hostname of the system
           networking.hostName = mkDefault name;
+        })
+
+        (singleton {
+          key = "easy-hosts#nixpkgs";
+          _file = "${easy-hosts.outPath}/lib.nix";
 
           nixpkgs = {
             # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
@@ -292,6 +304,9 @@ let
         # if we are on darwin we need to import the nixpkgs source, its used in some
         # modules, if this is not set then you will get an error
         (optionals (class == "darwin") (singleton {
+          key = "easy-hosts#nixpkgs-darwin";
+          _file = "${easy-hosts.outPath}/lib.nix";
+
           # without supplying an upstream nixpkgs source, nix-darwin will not be able to build
           # and will complain and log an error demanding that you must set this value
           nixpkgs.source = mkDefault nixpkgs;
@@ -386,7 +401,7 @@ let
               ;
 
             modules = concatLists (builtins.map (x: x.modules) sources);
-            specialArgs = builtins.foldl' recursiveUpdate {} (builtins.map (x: x.specialArgs) sources);
+            specialArgs = builtins.foldl' recursiveUpdate { } (builtins.map (x: x.specialArgs) sources);
           };
         }
       ))

@@ -1,3 +1,4 @@
+{ easy-hosts }:
 {
   lib,
   inputs,
@@ -9,9 +10,16 @@ let
   inherit (builtins) concatLists attrNames;
   inherit (lib.options) mkOption mkEnableOption literalExpression;
   inherit (lib) types;
-  inherit (lib.modules) mkRenamedOptionModule;
 
-  inherit (import ./lib.nix { inherit lib inputs withSystem; })
+  inherit
+    (import ./lib.nix {
+      inherit
+        lib
+        inputs
+        withSystem
+        easy-hosts
+        ;
+    })
     constructSystem
     mkHosts
     buildHosts
@@ -255,7 +263,8 @@ in
                 deployable = mkEnableOption "Is this host deployable" // {
                   default = false;
                 };
-              } // (mkBasicParams name);
+              }
+              // (mkBasicParams name);
             }
           )
         );
