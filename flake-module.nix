@@ -62,6 +62,12 @@ in
         description = "Only construct the hosts with for this platform";
       };
 
+      useGlobalPkgs = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Whether to use the `pkgs` instance from the flake parameters.";
+      };
+
       shared = mkBasicParams "Shared";
 
       perClass = mkOption {

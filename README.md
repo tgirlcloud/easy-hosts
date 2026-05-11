@@ -25,7 +25,9 @@ We also can auto construct your hosts based on your file structure. Whilst provi
 
 - `easy-hosts.autoConstruct`: If set to true, the module will automatically construct the hosts for you from the directory structure of `easy-hosts.path`.
 
-- `easy-hosts.path`: The directory to where the hosts are stored, this *must* be set to use `easy-hosts.autoConstruct`.
+- `easy-hosts.useGlobalPkgs`: Set `nixpkgs.pkgs` to the `pkgs` instance from the flake-parts modules parameters instead of setting `nixpkgs.hostPlatform`.
+
+- `easy-hosts.path`: The directory to where the hosts are stored, this _must_ be set to use `easy-hosts.autoConstruct`.
 
 - `easy-hosts.onlySystem`: If you only have 1 system type like `aarch64-darwin` then you can use this setting to prevent nesting your directories.
 
