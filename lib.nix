@@ -212,6 +212,7 @@ let
       system,
       nixpkgs,
       nix-darwin,
+      useGlobalPkgs ? false,
       modules ? [ ],
       specialArgs ? { },
       ...
@@ -289,7 +290,11 @@ let
           nixpkgs = {
             # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
             # however for evalModules this will not work, so we do this instead
-            hostPlatform = mkDefault system;
+            hostPlatform = lib.mkIf (!useGlobalPkgs) (mkDefault system);
+
+            # use the `pkgs` instance from the flake-parts module parameters if `useGlobalPkgs`
+            # is enabled.
+            pkgs = lib.mkIf useGlobalPkgs (withSystem system ({ pkgs, ... }: pkgs));
 
             # The path to the nixpkgs sources used to build the system.
             # This is automatically set up to be the store path of the nixpkgs flake used to build
@@ -390,6 +395,8 @@ let
 
           output = mkHost {
             inherit name class;
+
+            inherit (easyHostsConfig) useGlobalPkgs;
 
             inherit (hostConfig)
               system
