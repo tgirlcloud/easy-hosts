@@ -309,17 +309,9 @@ let
               key = "easy-hosts#nixpkgs-host-platform";
               _file = "${__curPos.file}";
 
-              nixpkgs = {
-                # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
-                # however for evalModules this will not work, so we do this instead
-                hostPlatform = mkDefault system;
-
-                # The path to the nixpkgs sources used to build the system.
-                # This is automatically set up to be the store path of the nixpkgs flake used to build
-                # the system if using lib.nixosSystem, and is otherwise null by default.
-                # so that means that we should set it to our nixpkgs flake output path
-                flake.source = nixpkgs.outPath;
-              };
+              # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
+              # however for evalModules this will not work, so we do this instead
+              nixpkgs.hostPlatform = mkDefault system;
             })
         )
 
