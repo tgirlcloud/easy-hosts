@@ -287,22 +287,41 @@ let
           key = "easy-hosts#nixpkgs";
           _file = "${__curPos.file}";
 
-          nixpkgs = {
-            # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
-            # however for evalModules this will not work, so we do this instead
-            hostPlatform = lib.mkIf (!useGlobalPkgs) (mkDefault system);
-
-            # use the `pkgs` instance from the flake-parts module parameters if `useGlobalPkgs`
-            # is enabled.
-            pkgs = lib.mkIf useGlobalPkgs (withSystem system ({ pkgs, ... }: pkgs));
-
-            # The path to the nixpkgs sources used to build the system.
-            # This is automatically set up to be the store path of the nixpkgs flake used to build
-            # the system if using lib.nixosSystem, and is otherwise null by default.
-            # so that means that we should set it to our nixpkgs flake output path
-            flake.source = nixpkgs.outPath;
-          };
+          # The path to the nixpkgs sources used to build the system.
+          # This is automatically set up to be the store path of the nixpkgs flake used to build
+          # the system if using lib.nixosSystem, and is otherwise null by default.
+          # so that means that we should set it to our nixpkgs flake output path
+          nixpkgs.flake.source = nixpkgs.outPath;
         })
+
+        (
+          if useGlobalPkgs then
+            (singleton {
+              key = "easy-hosts#nixpkgs-global-pkgs";
+              _file = "${__curPos.file}";
+
+              # use the `pkgs` instance from the flake-parts module parameters if `useGlobalPkgs`
+              # is enabled.
+              nixpkgs.pkgs = withSystem system ({ pkgs, ... }: pkgs);
+            })
+          else
+            (singleton {
+              key = "easy-hosts#nixpkgs-host-platform";
+              _file = "${__curPos.file}";
+
+              nixpkgs = {
+                # you can also do this as `inherit system;` with the normal `lib.nixosSystem`
+                # however for evalModules this will not work, so we do this instead
+                hostPlatform = mkDefault system;
+
+                # The path to the nixpkgs sources used to build the system.
+                # This is automatically set up to be the store path of the nixpkgs flake used to build
+                # the system if using lib.nixosSystem, and is otherwise null by default.
+                # so that means that we should set it to our nixpkgs flake output path
+                flake.source = nixpkgs.outPath;
+              };
+            })
+        )
 
         # if we are on darwin we need to import the nixpkgs source, its used in some
         # modules, if this is not set then you will get an error
